@@ -15,6 +15,7 @@ library(dplyr)
 library(ggplot2)
 library(tidyr)
 library(reactable)
+library(plyr)
 
 set.seed(05052021)
 ```
@@ -40,19 +41,53 @@ write.csv(raw_weka_data, "data/raw_weka_data.csv", row.names = FALSE)
   # in Weka maybe......
 ```
 
-```{r first_glance, echo=FALSE}
+```{r first_glance, echo=FALSE, warning=F}
 
 # Having first glance at each of the attributes... either here or graphics from Weka.........
 
-#i = 0
-#plots_collection = c()
-#for(i in 1:35){
-#plot_g =ggplot(gather(raw_weka_data %>% select(i)), aes(value)) +
-#          geom_histogram(stat = 'count') +
-#          facet_wrap(~key, scales = 'free') +
-#          scale_fill_brewer(palette = 'Set3')
-#plots_collection = c(plots_collection, plot_g)
-#}
+
+
+
+#attributes(raw_weka_data)
+
+#check = summary(raw_weka_data)
+#check
+
+
+
+
+######
+#a = raw_weka_data %>% select(col_names[1])
+#ve = unlist(a, use.names = FALSE)
+#ve
+
+#mean(ve)
+#sd(ve)
+
+
+col_names = names(raw_weka_data)
+#col_names
+#col_names[1]
+
+i = 0
+for(i in 1:35){
+
+considered_column = raw_weka_data %>% select(col_names[i])
+considered_column_vals = unlist(considered_column, use.names = FALSE)
+
+  
+plot_g =ggplot(raw_weka_data, aes_string(x = col_names[i])) +
+          geom_histogram(stat = 'count', aes(fill=Attrition)) +
+          geom_vline(xintercept = mean(considered_column_vals), linetype="dotted", size = 1, color = 'black') +
+          geom_vline(xintercept = mean(considered_column_vals) + 3 * sd(considered_column_vals), linetype="dotted",  size = 1, color = 'green') +
+          geom_vline(xintercept = mean(considered_column_vals) - 3 * sd(considered_column_vals), linetype="dotted",  size = 1, color = 'green') +
+          scale_fill_brewer(palette = 'Set1') +
+          theme_bw()
+
+#geom_ribbon( aes(xmin = mean(considered_column_vals) - 3 * sd(considered_column_vals), xmax= mean(considered_column_vals) + 3 * sd(considered_column_vals), ymin = 0, ymax = 20, fill = Attrition), alpha=0.03) +
+
+plot(plot_g)
+}
 
 ```
 ### Data preprocessing

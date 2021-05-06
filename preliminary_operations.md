@@ -23,7 +23,8 @@ write.csv(raw_weka_data, "data/raw_weka_data.csv", row.names = FALSE)
   # in Weka maybe......
 ```
 
-### Data preprocessing
+![](preliminary_operations_files/figure-gfm/first_glance-1.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-2.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-3.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-4.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-5.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-6.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-7.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-8.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-9.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-10.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-11.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-12.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-13.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-14.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-15.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-16.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-17.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-18.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-19.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-20.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-21.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-22.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-23.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-24.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-25.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-26.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-27.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-28.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-29.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-30.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-31.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-32.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-33.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-34.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-35.png)<!-- -->
+\#\#\# Data preprocessing
 
 ``` r
 # Dropping irrelevant attributes
@@ -96,6 +97,7 @@ write.csv(preprocessed_data, "data/preprocessed_data.csv", row.names = FALSE)
 #    )
 
 #preprocessed_table
+#just a little change to test git account...
 ```
 
 # Finding correlations in data
