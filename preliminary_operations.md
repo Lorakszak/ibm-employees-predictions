@@ -7,24 +7,73 @@ Karol Roszak
 
 ### Reading raw data
 
+General raw data characteristics description: There are 35 attributes
+within them one classification target attribute: “Attretion” (in polish
+“Wypalenie”) Meaning that the data serves the purpose of finding out
+if given employee is eternally fed up with his work and cannot stand it
+anymore (positive value) or is fine (negative value)
+
+Data set attributes description:
+
+  - 18 Qualitative
+      - 4 Nominal
+      - 4 Binary (counting target attribute)
+      - 10 Ordinal
+  - 17 Quantitative
+      - 15 Discrete
+      - 2 Continuous
+
+Additionally there were no missing values found, in case there were some
+we would use strict approach and get rid of instances with missing
+entries unless other tactic would be necessary e.g. when we would have
+to delete considerably big part of data set.
+
 ``` r
 # Reading raw data and entry preprocessing
 
 raw_data = read.csv("data/raw_data.csv")
 raw_data = na.omit(raw_data) # strict policy for missing values
 
-# Reshaping raw data and saving it to inspect in Weka
+# Reshaping raw data and saving it to inspect in Weka (moving target attribute at the end)
 
 raw_weka_data = raw_data %>% relocate(Attrition, .after=YearsWithCurrManager)
 write.csv(raw_weka_data, "data/raw_weka_data.csv", row.names = FALSE)
-
-# Raw data visualization to check out attribute values and their features
-
-  # in Weka maybe......
 ```
 
-![](preliminary_operations_files/figure-gfm/first_glance-1.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-2.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-3.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-4.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-5.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-6.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-7.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-8.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-9.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-10.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-11.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-12.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-13.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-14.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-15.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-16.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-17.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-18.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-19.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-20.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-21.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-22.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-23.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-24.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-25.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-26.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-27.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-28.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-29.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-30.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-31.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-32.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-33.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-34.png)<!-- -->![](preliminary_operations_files/figure-gfm/first_glance-35.png)<!-- -->
-\#\#\# Data preprocessing
+After inspecting each attribute in Weka application we found out those,
+which can be viewed as irrelevant or useless, specifically:
+
+  - **EmployeeCount** - Discrete attribute with only one value for all
+    instances
+  - **EmployeeNumber** - Discrete attribute with different value for
+    each instance
+  - **Over18** - Binary attribute with one value for each instance
+  - **StandardHours** - Discrete attribute with the same value for each
+    instance
+
+Chart interpretation informations:
+
+  - black dotted line stands for mean value
+  - green dotted lines stands for mean +/- 3\*standard deviation
+
+![](preliminary_operations_files/figure-gfm/first_glance-1.png)<!-- -->
+
+### Data preprocessing
+
+Preprocessing stage begins with removal of previously mentioned
+irrelevant attributes. Also, for making data more human readable we
+decided to rename some Ordinal attributes values from categorical (but
+numeric) to their actual meaning, this procedure concerns:
+
+  - **Education**
+  - **EnvironmentSatisfaction**
+  - **JobInvolvement**
+  - **JobSatisfaction**
+  - **PerformanceRating**
+  - **RelationshipSatisfaction**
+  - **WorkLifeBalance**
+
+<!-- end list -->
 
 ``` r
 # Dropping irrelevant attributes
@@ -35,7 +84,7 @@ preprocessed_data = raw_weka_data %>%
   select(-Over18) %>%
   select(-StandardHours)
 
-# Discretizing some attributes
+# Renaming some categorical attributes name conceptions
 
 preprocessed_data = preprocessed_data %>% 
   mutate(Education=recode(Education,
@@ -75,30 +124,18 @@ preprocessed_data = preprocessed_data %>%
                                  `3` = 'Better',
                                  `4` = 'Best'))
 
+# Renaming "ï..Age" attribute to just "Age", the rest is fine
+
+preprocessed_data = rename(preprocessed_data, replace = c("ï..Age" = "Age"))
+
+# Saving early preprocessed data set
+
 write.csv(preprocessed_data, "data/preprocessed_data.csv", row.names = FALSE)
 ```
 
-``` r
-# just a temporary table.....
+Inspecting some exemplary attributes in the data set
 
-#preprocessed_table = reactable(preprocessed_data, 
-#      defaultColDef = colDef(
-#      header = function(value) gsub(".", " ", value, fixed = TRUE),
-#      cell = function(value) format(value),
-#      align = "center",
-#      headerStyle = list(background = "#edf8fb")
-#    ),
-#    defaultPageSize = 5,
-#    bordered = TRUE,
-#    highlight = TRUE,
-#    filterable = TRUE,
-#    searchable = TRUE,
-#    resizable = TRUE
-#    )
-
-#preprocessed_table
-#just a little change to test git account...
-```
+![](preliminary_operations_files/figure-gfm/unnamed-chunk-1-1.png)<!-- -->
 
 # Finding correlations in data
 
