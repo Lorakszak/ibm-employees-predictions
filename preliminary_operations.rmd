@@ -157,7 +157,7 @@ values from categorical (but numeric) to their actual meaning, this procedure co
 
 Additionally there were some simplification in data set column names possible so we renamed:
 
-* __Attribute__ "ï..Age" to simply "Age"
+* Attribute "ï..Age" to simply "Age"
 
 ```{r preprocessing, echo=TRUE}
 # Dropping irrelevant attributes
@@ -436,7 +436,7 @@ So, we can for sure observe that there are 3 spikes. First one, the newbie guys 
 
 
 Lets check how time working under the same manager, working over time(crunch) and incomes influence our target attribute. 
-![some text](images/second.png){#id .class width=50% height=50%}
+![some text](images/second.png)
 First thing that comes to our minds is that distribution of people working over time, among people who declare burnout is much more balanced, than the others. 
 Other things that we can observe is that we can separate 3 groups of people, that share time worked under current manger. Once again this is 0, 2 and 7. 
 
