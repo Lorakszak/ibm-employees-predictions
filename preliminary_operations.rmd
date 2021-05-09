@@ -16,6 +16,7 @@ library(ggplot2)
 library(tidyr)
 library(reactable)
 library(plyr)
+library(gridExtra)
 
 set.seed(05052021)
 ```
@@ -25,27 +26,59 @@ set.seed(05052021)
 
 ### Reading raw data
 
+General raw data characteristics description:
+There are 35 attributes within them one classification target attribute: "Attretion" (in polish "Wypalenie")
+Meaning that the data serves the purpose of finding out if given employee is eternally fed up with his work
+and cannot stand it anymore (positive value) or is fine (negative value)
+
+Data set attributes description:
+
+* 18 Qualitative
+  + 4 Nominal
+  + 4 Binary (counting target attribute)
+  + 10 Ordinal
+* 17 Quantitative
+  + 15 Discrete
+  + 2 Continuous
+      
+Additionally there were no missing values found, in case there were some
+we would use strict approach and get rid of instances with missing entries 
+unless other tactic would be necessary e.g. when we would have to delete considerably
+big part of data set.
+
+
 ```{r reading_data, echo=TRUE}
 # Reading raw data and entry preprocessing
 
 raw_data = read.csv("data/raw_data.csv")
 raw_data = na.omit(raw_data) # strict policy for missing values
 
-# Reshaping raw data and saving it to inspect in Weka
+# Reshaping raw data and saving it to inspect in Weka (moving target attribute at the end)
 
 raw_weka_data = raw_data %>% relocate(Attrition, .after=YearsWithCurrManager)
 write.csv(raw_weka_data, "data/raw_weka_data.csv", row.names = FALSE)
 
-# Raw data visualization to check out attribute values and their features
-
-  # in Weka maybe......
 ```
+
+
+After inspecting each attribute in Weka application we found out those, 
+which can be viewed as irrelevant or useless, specifically:
+
+* __EmployeeCount__ - Discrete attribute with only one value for all instances
+* __EmployeeNumber__ - Discrete attribute with different value for each instance 
+* __Over18__ - Binary attribute with one value for each instance
+* __StandardHours__ - Discrete attribute with the same value for each instance
+
+Chart interpretation informations:
+
++ black dotted line stands for mean value
++ green dotted lines stands for mean +/- 3*standard deviation
 
 ```{r first_glance, echo=FALSE, warning=F}
 
-# Having first glance at each of the attributes... either here or graphics from Weka.........
+# Having first glance at each of the attributes revealed: 
 
-
+irrelevant_attrs = c('EmployeeCount', 'EmployeeNumber', 'Over18', 'StandardHours')
 
 
 #attributes(raw_weka_data)
@@ -64,33 +97,53 @@ write.csv(raw_weka_data, "data/raw_weka_data.csv", row.names = FALSE)
 #mean(ve)
 #sd(ve)
 
+for(i in 1:length(irrelevant_attrs)){
 
-col_names = names(raw_weka_data)
-#col_names
-#col_names[1]
-
-i = 0
-for(i in 1:35){
-
-considered_column = raw_weka_data %>% select(col_names[i])
+considered_column = raw_weka_data %>% select(irrelevant_attrs[i])
 considered_column_vals = unlist(considered_column, use.names = FALSE)
 
+#print(unique(raw_weka_data %>% select(irrelevant_attrs[i])))
   
-plot_g =ggplot(raw_weka_data, aes_string(x = col_names[i])) +
+plot_g =ggplot(raw_weka_data, aes_string(x = irrelevant_attrs[i])) +
           geom_histogram(stat = 'count', aes(fill=Attrition)) +
           geom_vline(xintercept = mean(considered_column_vals), linetype="dotted", size = 1, color = 'black') +
           geom_vline(xintercept = mean(considered_column_vals) + 3 * sd(considered_column_vals), linetype="dotted",  size = 1, color = 'green') +
           geom_vline(xintercept = mean(considered_column_vals) - 3 * sd(considered_column_vals), linetype="dotted",  size = 1, color = 'green') +
           scale_fill_brewer(palette = 'Set1') +
-          theme_bw()
+          theme_classic()
 
-#geom_ribbon( aes(xmin = mean(considered_column_vals) - 3 * sd(considered_column_vals), xmax= mean(considered_column_vals) + 3 * sd(considered_column_vals), ymin = 0, ymax = 20, fill = Attrition), alpha=0.03) +
-
-plot(plot_g)
+if (i == 1) {
+  plot_1 = plot_g
+} else if (i == 2) {
+  plot_2 = plot_g
+} else if (i == 3) {
+  plot_3 = plot_g
+} else if (i ==4) {
+  plot_4 = plot_g
 }
 
+}
+
+
+grid.arrange(plot_1, plot_2, plot_3, plot_4, ncol = 2)
+
 ```
+
+
 ### Data preprocessing
+
+Preprocessing stage begins with removal of previously mentioned irrelevant attributes.
+Also, for making data more human readable we decided to rename some Ordinal attributes
+values from categorical (but numeric) to their actual meaning, this procedure concerns:
+
+* __Education__
+* __EnvironmentSatisfaction__
+* __JobInvolvement__
+* __JobSatisfaction__
+* __PerformanceRating__
+* __RelationshipSatisfaction__
+* __WorkLifeBalance__
+
 
 ```{r preprocessing, echo=TRUE}
 # Dropping irrelevant attributes
@@ -101,7 +154,7 @@ preprocessed_data = raw_weka_data %>%
   select(-Over18) %>%
   select(-StandardHours)
 
-# Discretizing some attributes
+# Renaming some categorical attributes name conceptions
 
 preprocessed_data = preprocessed_data %>% 
   mutate(Education=recode(Education,
@@ -141,11 +194,72 @@ preprocessed_data = preprocessed_data %>%
                                  `3` = 'Better',
                                  `4` = 'Best'))
 
+# Renaming "ï..Age" attribute to just "Age", the rest is fine
+
+preprocessed_data = rename(preprocessed_data, replace = c("ï..Age" = "Age"))
+
+# Saving early preprocessed data set
+
 write.csv(preprocessed_data, "data/preprocessed_data.csv", row.names = FALSE)
 ```
 
+Inspecting some exemplary attributes in the data set 
 
-```{r preprocessed_data_presentation}
+```{r, echo=FALSE, warning=FALSE}
+inspected_attrs = c('Attrition', 'JobSatisfaction', 'MaritalStatus', 'Gender', 'Age', 'YearsInCurrentRole')
+
+for(i in 1:length(inspected_attrs)){
+
+considered_column = preprocessed_data %>% select(inspected_attrs[i])
+considered_column_vals = unlist(considered_column, use.names = FALSE)
+
+#print(unique(preprocessed_data %>% select(inspected_attrs[i])))
+  
+if (i > 0 && i < 7) {
+  plot_g =ggplot(preprocessed_data, aes_string(x = inspected_attrs[i])) +
+          geom_histogram(stat = 'count', aes(fill=Attrition)) +
+          geom_vline(xintercept = mean(considered_column_vals), linetype="dotted", size = 1, color = 'black') +
+          geom_vline(xintercept = mean(considered_column_vals) + 3 * sd(considered_column_vals), linetype="dotted",  size = 1, color = 'green') +
+          geom_vline(xintercept = mean(considered_column_vals) - 3 * sd(considered_column_vals), linetype="dotted",  size = 1, color = 'green') +
+          scale_fill_brewer(palette = 'Set1') +
+          theme_classic()
+}
+
+if (i >=5 ) {
+  plot_g_v2 =ggplot(preprocessed_data, aes_string(x = inspected_attrs[i])) +
+          geom_density(aes(fill=Attrition, alpha = 0.5)) +
+          geom_vline(xintercept = mean(considered_column_vals), linetype="dotted", size = 1, color = 'black') +
+          geom_vline(xintercept = mean(considered_column_vals) + 3 * sd(considered_column_vals), linetype="dotted",  size = 1, color = 'green') +
+          geom_vline(xintercept = mean(considered_column_vals) - 3 * sd(considered_column_vals), linetype="dotted",  size = 1, color = 'green') +
+          scale_fill_brewer(palette = 'Set1') +
+          theme_classic()
+}
+
+if (i == 1) {
+  plot_1 = plot_g
+} else if (i == 2) {
+  plot_2 = plot_g
+} else if (i == 3) {
+  plot_3 = plot_g
+} else if (i ==4) {
+  plot_4 = plot_g
+} else if (i == 5){
+  plot_5 = plot_g
+  plot_5_v2 = plot_g_v2
+} else if (i == 6) {
+  plot_6 = plot_g
+  plot_6_v2 = plot_g_v2
+}
+
+}
+
+
+grid.arrange(plot_1, plot_2, plot_3, plot_4, plot_5, plot_6, plot_5_v2, plot_6_v2, ncol = 2)
+
+```
+
+
+```{r preprocessed_data_presentation, echo=FALSE, warning=FALSE}
 
 # just a temporary table.....
 
@@ -166,6 +280,32 @@ write.csv(preprocessed_data, "data/preprocessed_data.csv", row.names = FALSE)
 
 #preprocessed_table
 #just a little change to test git account...
+
+col_names = names(preprocessed_data)
+#col_names
+#col_names[1]
+
+#col_names
+i = 0
+for(i in 1:31){
+
+considered_column = preprocessed_data %>% select(col_names[i])
+considered_column_vals = unlist(considered_column, use.names = FALSE)
+
+#print(unique(preprocessed_data %>% select(col_names[i])))
+  
+plot_g =ggplot(preprocessed_data, aes_string(x = col_names[i])) +
+          geom_histogram(stat = 'count', aes(fill=Attrition)) +
+          geom_vline(xintercept = mean(considered_column_vals), linetype="dotted", size = 1, color = 'black') +
+          geom_vline(xintercept = mean(considered_column_vals) + 3 * sd(considered_column_vals), linetype="dotted",  size = 1, color = 'green') +
+          geom_vline(xintercept = mean(considered_column_vals) - 3 * sd(considered_column_vals), linetype="dotted",  size = 1, color = 'green') +
+          scale_fill_brewer(palette = 'Set1') +
+          theme_bw()
+
+#geom_ribbon( aes(xmin = mean(considered_column_vals) - 3 * sd(considered_column_vals), xmax= mean(considered_column_vals) + 3 * sd(considered_column_vals), ymin = 0, ymax = 20, fill = Attrition), alpha=0.03) +
+
+#plot(plot_g)
+}
 
 ```
 
