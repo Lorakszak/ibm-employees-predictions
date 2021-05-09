@@ -17,12 +17,18 @@ library(tidyr)
 library(reactable)
 library(plyr)
 library(gridExtra)
+library(reticulate)
+library(htmltools)
 
 set.seed(05052021)
 ```
 
+1. [Reading and preprocessing](#read)
+2. [Finding correlations in data ](#cor)
+3. [Taking care of outliers in data](#out)
+4. [Exploring the data](#exp)
 
-# Reading and preprocessing 
+# Reading and preprocessing  <a name="read"></a>
 
 ### Reading raw data
 
@@ -309,56 +315,117 @@ plot_g =ggplot(preprocessed_data, aes_string(x = col_names[i])) +
 
 ```
 
-# Finding correlations in data
+# Finding correlations in data <a name="cor"></a>
 
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-
-```{r}
-
-```
-
-# Taking care of outliers in data
-
-```{r}
+```{python, echo = FALSE}
+import pandas as pd
+from plotnine import *
+import random
+import numpy as np
+import plotly.express as px
+import plotly.offline as py
+import plotly.graph_objects as go
 
 ```
 
 
-```{r}
-
+```{python, echo = FALSE}
+df = pd.read_csv('data/preprocessed_data.csv')
+#df['Age'] = df['�..Age']
+#df = df.drop('�..Age', axis = 1)
+cols = df.columns.tolist()
+cols = cols[-1:] + cols[:-1]
+df = df[cols]
+df['Attrition'] = df['Attrition'].apply(lambda x: 0 if x == 'No' else 1)
 ```
 
-```{r}
+Let's starts from looking on heatmap of correlation(of course only nominal attributes and target  are take into consideration)
 
+```{python, echo = FALSE}
+numerical = [u'Age', u'DailyRate', u'DistanceFromHome', u'HourlyRate', u'JobLevel',
+             u'MonthlyIncome', u'MonthlyRate', u'NumCompaniesWorked', u'PercentSalaryHike',
+             u'StockOptionLevel', u'TotalWorkingYears', u'TrainingTimesLastYear', u'YearsAtCompany',
+             u'YearsInCurrentRole', u'YearsSinceLastPromotion',u'YearsWithCurrManager', u'Attrition']
+numerical = numerical[::-1]
+data = [
+    go.Heatmap(
+        z=df[numerical].astype(float).corr().values, # Generating the Pearson correlation
+        x=df[numerical].columns.values,
+        y=df[numerical].columns.values,
+        colorscale='Viridis',
+        reversescale = False,
+#         text = True ,
+        opacity = 1.0
+    )
+]
+layout = go.Layout(
+    title='Pearson Correlation of numerical features',
+    xaxis = dict(ticks='', nticks=36),
+    yaxis = dict(ticks='' ),
+    width = 900, height = 700,
+    
+)
+fig = go.Figure(data=data, layout=layout)
+fig.show()
 ```
 
+And it's look's bad. 
 
 
+If color is *colder* then the correlation is lower, so almost all numeric attributes have non correlation with *Attrition*.
+We can observe some correlation, like Age with Total Working Years(**Shocking**), or Job Level with Monthly Income (**Thrilling**).
+This proves how much effort someone, who created this data, put in it, to do it as hard as possible. After spending quite some time with this data, 
+we are sure that this data could be real. 
+
+# Taking care of outliers in data <a name="out"></a>
+
+```{python, echo = FALSE}
+colors = ['#af8dc3', '#7fbf7b','#af8dc3', '#7fbf7b', '#af8dc3', '#7fbf7b','#af8dc3', '#7fbf7b']
+names = ['Distance From Home','Num Companies Worked','Percent Salary Hike','Total Working Years','Years At Company','Years In Current Role','Years Since Last Promotion','Years With Curr Manager']
+atts = ['DistanceFromHome','NumCompaniesWorked','PercentSalaryHike','TotalWorkingYears','YearsAtCompany','YearsInCurrentRole','YearsSinceLastPromotion','YearsWithCurrManager']
+```
+
+For detecting outliers we choose IQR method. Data is create in such way, that deleting attributes have no impact on correlation, so to not loss more data we replace outliers value with mean value of given attributes. 
+
+We looking for outliers only for few attributes for some reasons:
+
+> for some attributes, like Age it doesn't make sense to check outliers
+
+> some attributes we explain later
+
+> for some we check earlier, and they have no outliers, and looks bad on this graph, so we just don't put it in.
+
+```{r showChoro1, echo = FALSE}
+htmltools::includeHTML("./images/data1.html")
+htmltools::includeHTML("./images/data2.html")
+```
+We can observe that there is less outliers, but they still exists. Once again, the data is created in such way, that we cannot remove all outliers without losing a big chunk of data.
+
+Now lets look at Monthly Income.
+```{r showChoro3, echo = FALSE}
+htmltools::includeHTML("./images/data3.html")
+htmltools::includeHTML("./images/data4.html")
+```
+We can observed that detecting any outliers in Monthly Income attribute is pointless so we just do not include it and simmilars one in final data.
+
+# Exploring the data <a name="exp"></a>
+
+Despite data set being so hard to analyze, we can at least try to find something interesting. 
+At the begging lets looks how time spent on one position influences Attrition. 
+![some text](images/first.png)
+So, we can for sure observe that there are 3 spikes. First one, the newbie guys on given position. Second one, big chunk of people working for something like 2 years, this probably during next 2 years will fast decrease, because some of them go up and some of them drop job,to be really low at 5 years mark. Last spike are people which work 7 years. They are probably satisfied with their position. We can observe, that attrition will be independent from this group, so we can deduce that this attribute doesn't influences Attrition.(however we analise some like 10 different attributes in same manners, and from all of them we can have same conclusion).
 
 
+Lets check how time work under same manager, working over time(crunch) and incomes influence our target attribute. 
+![some text](images/second.png){#id .class width=50% height=50%}
+First thing that comes into mind is that distribution of people working over time, among people who declare burnout is much more balanced, than the others. 
+Other things that we can observe is that we can separate 3 groups of people, that share time worked under current manger. Once again this is 0, 2 and 7. 
 
+At the end lets check how Attrition looks when we compared average working years(calculate from Total Working Years and Numbers of Companies Worked) and years at company divided among people with different martial status, and people with different satisfaction from work environment.
+![some text](images/third.png)
+So, people that are single, and have low satisfaction from work environment and works short in given company, and have history of short time of working in others company, declare themselves burned out.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+If we start thing about, we fast come up to conclusion that this four symptoms are features of impatient people. And this only build up ours appreciation for someone who create this data set.
 
 
 
