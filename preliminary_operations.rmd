@@ -1,8 +1,12 @@
 ---
 title: "IBM employees predictions"
-author: "Karol Roszak"
-date: "5/5/2021"
-output: github_document
+author: "Kajetan Kubik, Karol Roszak and Mehmet Alpkaya"
+date: "5/11/2021"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+    math: katex
 ---
 
 ```{r setup, include=FALSE}
@@ -39,6 +43,7 @@ and cannot stand it anymore (positive value) or is fine (negative value)
 
 Data set attributes description:
 
+* 1470 instances (+237, -1233)
 * 18 Qualitative
   + 4 Nominal
   + 4 Binary (counting target attribute)
@@ -78,7 +83,7 @@ which can be viewed as irrelevant or useless, specifically:
 Chart interpretation informations:
 
 + black dotted line stands for mean value
-+ green dotted lines stands for mean +/- 3*standard deviation
++ green dotted lines stands for mean +/- 3 * standard deviation
 
 ```{r first_glance, echo=FALSE, warning=F}
 
@@ -150,6 +155,9 @@ values from categorical (but numeric) to their actual meaning, this procedure co
 * __RelationshipSatisfaction__
 * __WorkLifeBalance__
 
+Additionally there were some simplification in data set column names possible so we renamed:
+
+* __Attribute__ "ï..Age" to simply "Age"
 
 ```{r preprocessing, echo=TRUE}
 # Dropping irrelevant attributes
@@ -209,7 +217,19 @@ preprocessed_data = rename(preprocessed_data, replace = c("ï..Age" = "Age"))
 write.csv(preprocessed_data, "data/preprocessed_data.csv", row.names = FALSE)
 ```
 
-Inspecting some exemplary attributes in the data set 
+Data set attributes after cleaning, (31 attributes within them 1 target attribute) description:
+
+* 1470 instances (+237, -1233)
+* 18 Qualitative
+  + 4 Nominal
+  + 3 Binary (counting target attribute) (-1)
+  + 10 Ordinal
+* 14 Quantitative
+  + 12 Discrete (-3)
+  + 2 Continuous
+
+
+Inspecting (ONLY) some exemplary attributes in the data set 
 
 ```{r, echo=FALSE, warning=FALSE}
 inspected_attrs = c('Attrition', 'JobSatisfaction', 'MaritalStatus', 'Gender', 'Age', 'YearsInCurrentRole')
@@ -266,6 +286,8 @@ grid.arrange(plot_1, plot_2, plot_3, plot_4, plot_5, plot_6, plot_5_v2, plot_6_v
 
 
 ```{r preprocessed_data_presentation, echo=FALSE, warning=FALSE}
+
+# This part will not be taken into consideration for now....
 
 # just a temporary table.....
 
@@ -339,7 +361,7 @@ df = df[cols]
 df['Attrition'] = df['Attrition'].apply(lambda x: 0 if x == 'No' else 1)
 ```
 
-Let's starts from looking on heatmap of correlation(of course only nominal attributes and target  are take into consideration)
+Let's start from looking on heatmap of correlations (of course only nominal attributes and target are take into consideration)
 
 ```{python, echo = FALSE}
 numerical = [u'Age', u'DailyRate', u'DistanceFromHome', u'HourlyRate', u'JobLevel',
@@ -369,13 +391,12 @@ fig = go.Figure(data=data, layout=layout)
 fig.show()
 ```
 
-And it's look's bad. 
+And it looks bad. 
 
 
 If color is *colder* then the correlation is lower, so almost all numeric attributes have non correlation with *Attrition*.
 We can observe some correlation, like Age with Total Working Years(**Shocking**), or Job Level with Monthly Income (**Thrilling**).
-This proves how much effort someone, who created this data, put in it, to do it as hard as possible. After spending quite some time with this data, 
-we are sure that this data could be real. 
+This proves how much effort someone, who created this data put into it, to do it as hard as possible. 
 
 # Taking care of outliers in data <a name="out"></a>
 
@@ -385,47 +406,45 @@ names = ['Distance From Home','Num Companies Worked','Percent Salary Hike','Tota
 atts = ['DistanceFromHome','NumCompaniesWorked','PercentSalaryHike','TotalWorkingYears','YearsAtCompany','YearsInCurrentRole','YearsSinceLastPromotion','YearsWithCurrManager']
 ```
 
-For detecting outliers we choose IQR method. Data is create in such way, that deleting attributes have no impact on correlation, so to not loss more data we replace outliers value with mean value of given attributes. 
+For detecting outliers we chose IQR method. Data is created in such a way, that deleting attributes have no impact on correlation, so to not loss more data we replace outliers value with mean value of given attributes. 
 
-We looking for outliers only for few attributes for some reasons:
+We are looking for outliers only for few attributes for some reasons:
 
-> for some attributes, like Age it doesn't make sense to check outliers
-
-> some attributes we explain later
-
-> for some we check earlier, and they have no outliers, and looks bad on this graph, so we just don't put it in.
+* for some attributes, like Age it doesn't make sense to check outliers
+* some attributes we explain later
+* for some we check earlier, and they have no outliers, and looks bad on this graph, so we just don't put it in.
 
 ```{r showChoro1, echo = FALSE}
 htmltools::includeHTML("./images/data1.html")
 htmltools::includeHTML("./images/data2.html")
 ```
-We can observe that there is less outliers, but they still exists. Once again, the data is created in such way, that we cannot remove all outliers without losing a big chunk of data.
+We can observe that there are less outliers, but they still exists. Once again, the data is created in such way, that we cannot remove all outliers without losing a big chunk of it.
 
 Now lets look at Monthly Income.
 ```{r showChoro3, echo = FALSE}
 htmltools::includeHTML("./images/data3.html")
 htmltools::includeHTML("./images/data4.html")
 ```
-We can observed that detecting any outliers in Monthly Income attribute is pointless so we just do not include it and simmilars one in final data.
+We can observe that detecting any outliers in **Monthly Income** attribute is pointless so we just do not introduce it and similar ones in final data set.
 
 # Exploring the data <a name="exp"></a>
 
 Despite data set being so hard to analyze, we can at least try to find something interesting. 
-At the begging lets looks how time spent on one position influences Attrition. 
+At the begging lets looks how time spent on one position influences **Attrition**. 
 ![some text](images/first.png)
-So, we can for sure observe that there are 3 spikes. First one, the newbie guys on given position. Second one, big chunk of people working for something like 2 years, this probably during next 2 years will fast decrease, because some of them go up and some of them drop job,to be really low at 5 years mark. Last spike are people which work 7 years. They are probably satisfied with their position. We can observe, that attrition will be independent from this group, so we can deduce that this attribute doesn't influences Attrition.(however we analise some like 10 different attributes in same manners, and from all of them we can have same conclusion).
+So, we can for sure observe that there are 3 spikes. First one, the newbie guys on given position. Second one, big chunk of people working for something around 2 years, this will probably  rapidly decrease, because some of them go up and some of them drop job, to be really low at 5 years mark. Last spike are people which work 7 years. They are probably satisfied with their position. We can observe, that **Attrition** will be independent from this group, so we can deduce that this attribute doesn't influences **Attrition**.(however we analise some like 10 different attributes in same manners, and from all of them we can have same conclusion).
 
 
-Lets check how time work under same manager, working over time(crunch) and incomes influence our target attribute. 
+Lets check how time working under the same manager, working over time(crunch) and incomes influence our target attribute. 
 ![some text](images/second.png){#id .class width=50% height=50%}
-First thing that comes into mind is that distribution of people working over time, among people who declare burnout is much more balanced, than the others. 
+First thing that comes to our minds is that distribution of people working over time, among people who declare burnout is much more balanced, than the others. 
 Other things that we can observe is that we can separate 3 groups of people, that share time worked under current manger. Once again this is 0, 2 and 7. 
 
-At the end lets check how Attrition looks when we compared average working years(calculate from Total Working Years and Numbers of Companies Worked) and years at company divided among people with different martial status, and people with different satisfaction from work environment.
+At the end lets check how Attrition looks when we compare average working years (calculated from Total Working Years and Numbers of Companies Worked) and years at company divided among people with different martial status, and people with different satisfaction from work environment.
 ![some text](images/third.png)
 So, people that are single, and have low satisfaction from work environment and works short in given company, and have history of short time of working in others company, declare themselves burned out.
 
-If we start thing about, we fast come up to conclusion that this four symptoms are features of impatient people. And this only build up ours appreciation for someone who create this data set.
+If we start thinking about that, we quickly come up to conclusion that this four symptoms are features of impatient people. And this only builds up ours appreciation for someone who created this data set for practicing Data Science skills.
 
 
 
