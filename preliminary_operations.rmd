@@ -220,7 +220,7 @@ write.csv(preprocessed_data, "data/preprocessed_data.csv", row.names = FALSE)
 Data set attributes after cleaning, (31 attributes within them 1 target attribute) description:
 
 * 1470 instances (+237, -1233)
-* 18 Qualitative
+* 17 Qualitative
   + 4 Nominal
   + 3 Binary (counting target attribute) (-1)
   + 10 Ordinal
@@ -284,56 +284,51 @@ grid.arrange(plot_1, plot_2, plot_3, plot_4, plot_5, plot_6, plot_5_v2, plot_6_v
 
 ```
 
-
 ```{r preprocessed_data_presentation, echo=FALSE, warning=FALSE}
 
-# This part will not be taken into consideration for now....
+preprocessed_table = reactable(preprocessed_data,
+      defaultColDef = colDef(
+      header = function(value) gsub(".", " ", value, fixed = TRUE),
+      cell = function(value) format(value),
+      align = "center",
+      headerStyle = list(background = "#edf8fb")
+    ),
+    defaultPageSize = 5,
+    bordered = TRUE,
+    highlight = TRUE,
+    filterable = TRUE,
+    searchable = TRUE,
+    resizable = TRUE
+    )
 
-# just a temporary table.....
+preprocessed_table
 
-#preprocessed_table = reactable(preprocessed_data, 
-#      defaultColDef = colDef(
-#      header = function(value) gsub(".", " ", value, fixed = TRUE),
-#      cell = function(value) format(value),
-#      align = "center",
-#      headerStyle = list(background = "#edf8fb")
-#    ),
-#    defaultPageSize = 5,
-#    bordered = TRUE,
-#    highlight = TRUE,
-#    filterable = TRUE,
-#    searchable = TRUE,
-#    resizable = TRUE
-#    )
 
-#preprocessed_table
-#just a little change to test git account...
+# DROPPED PLOTS OF ALL ATTRIBUTES (NO TIME FOR ANALYSIS EACH ONE OF THEM)
 
-col_names = names(preprocessed_data)
-#col_names
-#col_names[1]
+#col_names = names(preprocessed_data)
 
-#col_names
-i = 0
-for(i in 1:31){
+#i = 0
 
-considered_column = preprocessed_data %>% select(col_names[i])
-considered_column_vals = unlist(considered_column, use.names = FALSE)
+#for(i in 1:31){
+
+#considered_column = preprocessed_data %>% select(col_names[i])
+#considered_column_vals = unlist(considered_column, use.names = FALSE)
 
 #print(unique(preprocessed_data %>% select(col_names[i])))
-  
-plot_g =ggplot(preprocessed_data, aes_string(x = col_names[i])) +
-          geom_histogram(stat = 'count', aes(fill=Attrition)) +
-          geom_vline(xintercept = mean(considered_column_vals), linetype="dotted", size = 1, color = 'black') +
-          geom_vline(xintercept = mean(considered_column_vals) + 3 * sd(considered_column_vals), linetype="dotted",  size = 1, color = 'green') +
-          geom_vline(xintercept = mean(considered_column_vals) - 3 * sd(considered_column_vals), linetype="dotted",  size = 1, color = 'green') +
-          scale_fill_brewer(palette = 'Set1') +
-          theme_bw()
+
+#plot_g =ggplot(preprocessed_data, aes_string(x = col_names[i])) +
+#          geom_histogram(stat = 'count', aes(fill=Attrition)) +
+#          geom_vline(xintercept = mean(considered_column_vals), linetype="dotted", size = 1, color = 'black') +
+#          geom_vline(xintercept = mean(considered_column_vals) + 3 * sd(considered_column_vals), linetype="dotted",  size = 1, color = 'green') +
+#          geom_vline(xintercept = mean(considered_column_vals) - 3 * sd(considered_column_vals), linetype="dotted",  size = 1, color = 'green') +
+#          scale_fill_brewer(palette = 'Set1') +
+#          theme_bw()
 
 #geom_ribbon( aes(xmin = mean(considered_column_vals) - 3 * sd(considered_column_vals), xmax= mean(considered_column_vals) + 3 * sd(considered_column_vals), ymin = 0, ymax = 20, fill = Attrition), alpha=0.03) +
 
 #plot(plot_g)
-}
+#}
 
 ```
 
@@ -406,7 +401,7 @@ names = ['Distance From Home','Num Companies Worked','Percent Salary Hike','Tota
 atts = ['DistanceFromHome','NumCompaniesWorked','PercentSalaryHike','TotalWorkingYears','YearsAtCompany','YearsInCurrentRole','YearsSinceLastPromotion','YearsWithCurrManager']
 ```
 
-For detecting outliers we chose IQR method. Data is created in such a way, that deleting attributes have no impact on correlation, so to not loss more data we replace outliers value with mean value of given attributes. 
+For detecting outliers we chose **IQR method**. Data is created in such a way, that deleting attributes have no impact on correlation, so to not loss more data we replace outliers value with mean value of given attributes. 
 
 We are looking for outliers only for few attributes for some reasons:
 
@@ -448,5 +443,5 @@ If we start thinking about that, we quickly come up to conclusion that this four
 
 
 
-
+> source: [kaggle](https://www.kaggle.com/pavansubhasht/ibm-hr-analytics-attrition-dataset)
 
